@@ -42,122 +42,120 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  ToastProvider>
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
       <NotificationsProvider>
         <Router>
-        <Navbar />
-        <div className="pt-16">
-          <Navigation />
-        </div>
-port default function App() {
-  return (
-    <AuthProvider>
-      <ToastProvider>
-        <NotificationsProvider>
-          <Router>
           <Navbar />
           <div className="pt-16">
             <Navigation />
           </div>
           <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/activate"
-            element={
-              <ProtectedRoute>
-                <ActivatePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/wallet"
-            element={
-              <ProtectedRoute>
-                <WalletPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/feed" element={<FeedPage />} />
-          <Route path="/events" element={<EventsPage />} />
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/brand"
-            element={
-              <ProtectedRoute>
-                <BrandDashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/brand/products"
-            element={
-              <ProtectedRoute>
-                <BrandProductsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/brand/cards"
-            element={
-              <ProtectedRoute>
-                <BrandCardTemplatesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/brand/wallet"
-            element={
-              <ProtectedRoute>
-                <BrandWalletPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/brand/vehicles"
-            element={
-              <ProtectedRoute>
-                <VehicleManagementPage />
-              </ProtectedRoute>
-            }
-        </Routes>
-        </div>
-        <Navigation />
-      </Router>
-    </NotificationsProvider>
-  </Toast    <ProtectedRoute>
-                <AdminPanelPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/activate"
+              element={
+                <ProtectedRoute>
+                  <ActivatePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wallet"
+              element={
+                <ProtectedRoute>
+                  <WalletPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/feed" element={<FeedPage />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand"
+              element={
+                <ProtectedRoute>
+                  <BrandDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand/products"
+              element={
+                <ProtectedRoute>
+                  <BrandProductsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand/cards"
+              element={
+                <ProtectedRoute>
+                  <BrandCardTemplatesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand/wallet"
+              element={
+                <ProtectedRoute>
+                  <BrandWalletPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand/vehicles"
+              element={
+                <ProtectedRoute>
+                  <VehicleManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPanelPage />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </Router>
-        </NotificationsProvider>
-      </ToastProvider>
-    </AuthProvider>
+      </NotificationsProvider>
+    </ToastProvider>
   );
 }
