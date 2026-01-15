@@ -1,82 +1,63 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/react-app/hooks/useAuth';
+import { useNavigate } from 'react-router';
+import { supabase } from '@/supabaseClient';
+import { LoadingSpinner } from '@/react-app/components/LoadingSpinner';
 import { TrendingUp, Calendar, Award, Target, CheckCircle2, Clock, MapPin, Car } from 'lucide-react';
 import { Link } from 'react-router';
 
-interface DashboardData {
-  userStats: {
-    activations: number;
-    eventsAttended: number;
-    currentTier: string;
-    memberSince: string;
-  };
-  cardProgress: {
-    currentCard: any;
-    nextCards: any[];
-  };
-  recentActivity: any[];
-  upcomingEvents: any[];
-}
-
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const [data, setData] = useState<DashboardData | null>(null);
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    activations: 0,
+    eventsAttended: 0,
+    tier: 'Silver',
+    memberSince: new Date().toLocaleDateString(),
+  });
 
   useEffect(() => {
-    fetchDashboard();
+    fetchUserData();
   }, []);
 
-  const fetchDashboard = async () => {
+  const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('/api/user/dashboard', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const dashboardData = await response.json();
-        setData(dashboardData);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        navigate('/login');
+        return;
       }
-    } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
+      setUser(authUser.user_metadata || {});
+      // Initialize with default stats
+      setStats({
+        activations: 0,
+        eventsAttended: 0,
+        tier: authUser.user_metadata?.tier || 'Silver',
+        memberSince: new Date(authUser.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
+      });
+    } catch (err) {
+      console.error('Error fetching user:', err);
+      navigate('/login');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Cargando...</div>
-      </div>
-    );
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric' 
-    });
-  };
-
-  const getProgressPercentage = (conditions: any[]) => {
-    if (!conditions || conditions.length === 0) return 0;
-    const met = conditions.filter(c => c.met).length;
-    return Math.round((met / conditions.length) * 100);
-  };
+  if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 pb-20">
-      <div className="max-w-7xl mx-auto pt-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 pb-20 pt-20">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Hola, {user?.name || 'Miembro'} 👋
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+            Hello, {user?.name || 'Member'} 👋
           </h1>
-          <p className="text-white/70 text-lg">Aquí está tu actividad y progreso</p>
+          <p className="text-slate-600 text-lg">Here is your activity and progress</p>
         </div>
 
         {/* Stats Grid */}

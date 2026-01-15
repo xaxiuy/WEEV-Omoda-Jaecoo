@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Check, Star, Filter, Plus, Edit, Trash2 } from 'lucide-react';
-import { useAuth } from '@/react-app/hooks/useAuth';
+import { supabase } from '@/supabaseClient';
 import { useToast } from '@/react-app/hooks/useToast';
 import { ImageUpload } from '@/react-app/components/ImageUpload';
 import LoadingSpinner from '@/react-app/components/LoadingSpinner';
@@ -25,7 +25,7 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const { user } = useAuth();
+  const [user, setUser] = useState<any>(null);
   const toast = useToast();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,15 +44,21 @@ export default function EventsPage() {
     capacity: '',
   });
 
-  const isBrandAdmin = user?.role === 'brand_admin' || user?.role === 'superadmin';
+  const isBrandAdmin = user?.user_metadata?.role === 'brand_admin' || user?.user_metadata?.role === 'superadmin';
 
   useEffect(() => {
-    fetchEvents();
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setUser(authUser);
+      fetchEvents();
+    };
+    getUser();
   }, [filter]);
 
   const fetchEvents = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const headers: Record<string, string> = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
@@ -75,18 +81,14 @@ export default function EventsPage() {
     }
   };
 
-  const rsvp = async (eventId: string, status: 'going' | 'interested' | 'cancelled') => {
-    if (!user) {
-      toast.info('Inicia sesión para confirmar asistencia');
-      return;
-    }
-
-    const token = localStorage.getItem('accessToken');
+  const handleRsvp = async (eventId: string, status: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const response = await fetch(`/api/events/${eventId}/rsvp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ status }),
     });
@@ -122,7 +124,8 @@ export default function EventsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const payload = {
       type: formData.type,
       title: formData.title,
@@ -143,7 +146,7 @@ export default function EventsPage() {
       const response = await fetch(url, {
         method: editingEvent ? 'PATCH' : 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -166,11 +169,12 @@ export default function EventsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este evento?')) return;
 
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     try {
       const response = await fetch(`/api/brand/events/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.ok) {

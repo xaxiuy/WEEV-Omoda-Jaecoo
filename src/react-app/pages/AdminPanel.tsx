@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Building2, Car, FileText, Calendar, Shield } from 'lucide-react';
+import { supabase } from '@/supabaseClient';
 
 interface SystemStats {
   totalUsers: number;
@@ -21,11 +22,12 @@ export default function AdminPanelPage() {
 
   const fetchAdmin = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       
       if (activeTab === 'overview') {
         const response = await fetch('/api/admin/stats', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const data = await response.json();
@@ -33,7 +35,7 @@ export default function AdminPanelPage() {
         }
       } else if (activeTab === 'users') {
         const response = await fetch('/api/admin/users', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const data = await response.json();
@@ -41,7 +43,7 @@ export default function AdminPanelPage() {
         }
       } else if (activeTab === 'brands') {
         const response = await fetch('/api/admin/brands', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const data = await response.json();

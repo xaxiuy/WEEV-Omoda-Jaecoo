@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Calendar, TrendingUp, Car, CreditCard, Package, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { supabase } from '@/supabaseClient';
 
 interface DashboardStats {
   totalActivations: number;
@@ -23,14 +24,15 @@ export default function BrandDashboardPage() {
 
   const fetchDashboard = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       
       const [statsRes, analyticsRes] = await Promise.all([
         fetch('/api/brand/dashboard', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }),
         fetch('/api/brand/analytics?days=30', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }),
       ]);
 

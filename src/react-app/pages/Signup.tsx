@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { useAuth } from '@/react-app/hooks/useAuth';
+import { supabase } from '@/supabaseClient';
+import { LoadingSpinner } from '@/react-app/components/LoadingSpinner';
 
 export default function SignupPage() {
   const navigate = useNavigate();
-  const { signup } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,47 +21,71 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await signup(formData);
-      navigate('/');
+      // Sign up user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            phone: formData.phone,
+            city: formData.city,
+          },
+        },
+      });
+
+      if (authError) {
+        setError(authError.message || 'Signup failed');
+        return;
+      }
+
+      // Auto-sign in after signup
+      if (authData?.user) {
+        navigate('/');
+      }
     } catch (err: any) {
-      setError(err.message || 'Signup failed');
+      setError(err.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading && !error) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
+        <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Join WEEV</h1>
-            <p className="text-white/70">Create your account</p>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">Join WEEV</h1>
+            <p className="text-slate-600">Create your account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-500/20 border border-red-500/50 text-red-100 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
-                Name
+              <label htmlFor="name" className="block text-sm font-medium text-slate-900 mb-2">
+                Full Name
               </label>
               <input
                 id="name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="John Doe"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-900 mb-2">
                 Email *
               </label>
               <input
@@ -70,13 +94,13 @@ export default function SignupPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-900 mb-2">
                 Password *
               </label>
               <input
@@ -86,14 +110,14 @@ export default function SignupPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 minLength={8}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="••••••••"
               />
-              <p className="text-xs text-white/50 mt-1">Minimum 8 characters</p>
+              <p className="text-xs text-slate-500 mt-1">Minimum 8 characters</p>
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-white/90 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-slate-900 mb-2">
                 Phone
               </label>
               <input
@@ -101,13 +125,13 @@ export default function SignupPage() {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="+598 99 123 456"
               />
             </div>
 
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-white/90 mb-2">
+              <label htmlFor="city" className="block text-sm font-medium text-slate-900 mb-2">
                 City
               </label>
               <input
@@ -115,7 +139,7 @@ export default function SignupPage() {
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Montevideo"
               />
             </div>
@@ -123,16 +147,16 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-white/70">
+            <p className="text-slate-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-purple-300 hover:text-purple-200 font-medium">
+              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
                 Sign in
               </Link>
             </p>

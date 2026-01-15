@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Flag, Send } from 'lucide-react';
-import { useAuth } from '@/react-app/hooks/useAuth';
+import { supabase } from '@/supabaseClient';
 import { useToast } from '@/react-app/hooks/useToast';
 import LoadingSpinner from '@/react-app/components/LoadingSpinner';
 import EmptyState from '@/react-app/components/EmptyState';
@@ -31,7 +31,7 @@ interface Comment {
 }
 
 export default function FeedPage() {
-  const { user } = useAuth();
+  const [user, setUser] = useState<any>(null);
   const toast = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,12 +41,18 @@ export default function FeedPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchPosts();
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setUser(authUser);
+      fetchPosts();
+    };
+    getUser();
   }, []);
 
   const fetchPosts = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const headers: Record<string, string> = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
@@ -65,15 +71,11 @@ export default function FeedPage() {
   };
 
   const toggleLike = async (postId: string) => {
-    if (!user) {
-      toast.info('Inicia sesión para dar me gusta');
-      return;
-    }
-
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const response = await fetch(`/api/feed/posts/${postId}/like`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
     if (response.ok) {
@@ -109,12 +111,13 @@ export default function FeedPage() {
 
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch(`/api/feed/posts/${postId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({ content: commentText }),
       });

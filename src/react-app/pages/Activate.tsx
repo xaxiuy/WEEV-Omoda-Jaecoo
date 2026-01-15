@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Car, Check, Smartphone, FileText, Loader2 } from 'lucide-react';
+import { supabase } from '@/supabaseClient';
 
 const BRAND_ID = '00000000-0000-0000-0000-000000000001'; // Omoda Jaecoo
 
@@ -18,11 +19,13 @@ export default function ActivatePage() {
   const handleActivate = async () => {
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch('/api/activations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
           brandId: BRAND_ID,

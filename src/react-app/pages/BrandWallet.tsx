@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CreditCard, Search, Filter, ChevronDown, ChevronUp, Award, Zap, Sparkles, Users } from 'lucide-react';
+import { supabase } from '@/supabaseClient';
 import WalletCardDisplay from '@/react-app/components/WalletCardDisplay';
 import CardProgress from '@/react-app/components/CardProgress';
 
@@ -51,9 +52,10 @@ export default function BrandWalletPage() {
 
   const fetchWalletData = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch('/api/brand/wallet/members', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.status === 403) {
@@ -77,9 +79,10 @@ export default function BrandWalletPage() {
   const fetchMemberProgress = async (userId: string) => {
     setLoadingProgress(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch(`/api/brand/wallet/members/${userId}/progress`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.ok) {
@@ -95,11 +98,12 @@ export default function BrandWalletPage() {
 
   const assignCard = async (userId: string, templateId: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch(`/api/brand/wallet/members/${userId}/assign`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ templateId }),

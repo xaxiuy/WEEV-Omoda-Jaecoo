@@ -1,10 +1,20 @@
 import { Link, useLocation } from 'react-router';
+import { useEffect, useState } from 'react';
 import { Home, Calendar, CreditCard, User, Building2, Shield, LayoutDashboard } from 'lucide-react';
-import { useAuth } from '@/react-app/hooks/useAuth';
+import { supabase } from '@/supabaseClient';
 
 export default function Navigation() {
   const location = useLocation();
-  const { user } = useAuth();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const fetchUser = async () => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    setUser(authUser?.user_metadata || null);
+  };
 
   const isActive = (path: string) => location.pathname === path;
   const isBrandUser = user?.role === 'brand_admin' || user?.role === 'brand_member';
@@ -30,13 +40,13 @@ export default function Navigation() {
         to={to}
         className={`relative flex flex-col items-center space-y-1 px-3 py-2 rounded-xl transition-all duration-200 active:scale-95 ${
           active 
-            ? 'text-[#1877F2]' 
-            : 'text-gray-500 active:text-gray-700'
+            ? 'text-blue-600' 
+            : 'text-slate-500 hover:text-slate-700'
         }`}
       >
         {/* Active indicator */}
         {active && (
-          <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-[#1877F2] rounded-full"></div>
+          <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full"></div>
         )}
         
         {/* Icon with badge */}
@@ -59,12 +69,12 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] safe-area-inset-bottom">
       <div className="max-w-7xl mx-auto px-2 md:px-4">
         <div className="flex items-center justify-around h-16 md:h-18">
           <NavItem to="/" icon={Home} label="Home" />
           <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-          <NavItem to="/events" icon={Calendar} label="Eventos" />
+          <NavItem to="/events" icon={Calendar} label="Events" />
           <NavItem to="/wallet" icon={CreditCard} label="Wallet" />
           
           {isBrandUser && (
@@ -75,9 +85,12 @@ export default function Navigation() {
             <NavItem to="/admin" icon={Shield} label="Admin" />
           )}
           
-          <NavItem to="/profile" icon={User} label="Perfil" />
+          <NavItem to="/profile" icon={User} label="Profile" />
         </div>
       </div>
+    </nav>
+  );
+}
     </nav>
   );
 }

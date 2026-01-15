@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Car, Plus, Edit, Trash2, Upload, FileSpreadsheet, Search } from 'lucide-react';
+import { supabase } from '@/supabaseClient';
 import { ImageUpload } from '@/react-app/components/ImageUpload';
 import { useToast } from '@/react-app/hooks/useToast';
 import LoadingSpinner from '@/react-app/components/LoadingSpinner';
@@ -118,11 +119,12 @@ export default function VehicleManagementPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       
       if (activeTab === 'models') {
         const response = await fetch('/api/vehicles/models', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const data = await response.json();
@@ -130,7 +132,7 @@ export default function VehicleManagementPage() {
         }
       } else {
         const response = await fetch('/api/vehicles/inventory', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const data = await response.json();
@@ -148,7 +150,8 @@ export default function VehicleManagementPage() {
   const handleModelSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const payload = {
       name: modelForm.name,
       year: modelForm.year,
@@ -179,7 +182,7 @@ export default function VehicleManagementPage() {
       const response = await fetch(url, {
         method: editingModel ? 'PATCH' : 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -202,7 +205,8 @@ export default function VehicleManagementPage() {
   const handleInventorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const payload = {
       modelId: inventoryForm.modelId,
       vin: inventoryForm.vin,
@@ -227,7 +231,7 @@ export default function VehicleManagementPage() {
       const response = await fetch(url, {
         method: editingVehicle ? 'PATCH' : 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -256,7 +260,8 @@ export default function VehicleManagementPage() {
       return;
     }
 
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     
     // Parse CSV data
     const lines = bulkData.csvData.trim().split('\n');
@@ -320,7 +325,7 @@ export default function VehicleManagementPage() {
       const response = await fetch('/api/vehicles/inventory/bulk', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -352,11 +357,12 @@ export default function VehicleManagementPage() {
   const handleDeleteModel = async (id: string) => {
     if (!confirm('¿Eliminar este modelo? Los vehículos asociados deben ser eliminados primero.')) return;
 
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     try {
       const response = await fetch(`/api/vehicles/models/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.ok) {
@@ -375,11 +381,12 @@ export default function VehicleManagementPage() {
   const handleDeleteVehicle = async (id: string) => {
     if (!confirm('¿Eliminar este vehículo del inventario?')) return;
 
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     try {
       const response = await fetch(`/api/vehicles/inventory/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.ok) {

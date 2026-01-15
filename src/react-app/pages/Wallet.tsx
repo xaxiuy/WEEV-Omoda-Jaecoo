@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { CreditCard, Bell, ChevronRight, Sparkles, Star, Lock, Zap, Gift, TrendingUp } from 'lucide-react';
-import { useAuth } from '@/react-app/hooks/useAuth';
+import { supabase } from '@/supabaseClient';
 import WalletCardDisplay from '@/react-app/components/WalletCardDisplay';
 import CardProgress from '@/react-app/components/CardProgress';
+import LoadingSpinner from '@/react-app/components/LoadingSpinner';
 
 interface WalletCard {
   id: string;
@@ -43,7 +44,8 @@ interface WalletUpdate {
 }
 
 export default function WalletPage() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
   const [card, setCard] = useState<WalletCard | null>(null);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [userProgress, setUserProgress] = useState<any>(null);
@@ -52,12 +54,22 @@ export default function WalletPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<CardTemplate | null>(null);
 
   useEffect(() => {
-    fetchWallet();
-  }, []);
-
-  const fetchWallet = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        navigate('/login');
+        retu{ data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      const [cardRes, templatesRes, updatesRes] = await Promise.all([
+        fetch('/api/wallet/card', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }),
+        fetch('/api/wallet/templates', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }),
+        fetch('/api/wallet/updates', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {);
       
       const [cardRes, templatesRes, updatesRes] = await Promise.all([
         fetch('/api/wallet/card', {
@@ -84,10 +96,11 @@ export default function WalletPage() {
 
       if (updatesRes.ok) {
         const data = await updatesRes.json();
-        setUpdates(data.updates);
-      }
-    } catch (error) {
-      console.error('Failed to fetch wallet', error);
+        setU{ data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      await fetch(`/api/wallet/updates/${updateId}/read`, {
+        method: 'PATCH',
+        headers: token ? { Authorization: `Bearer ${token}` } : {;
     } finally {
       setLoading(false);
     }

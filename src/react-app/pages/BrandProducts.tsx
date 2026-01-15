@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Car, Package } from 'lucide-react';
 import { ImageUpload } from '@/react-app/components/ImageUpload';
+import { supabase } from '@/supabaseClient';
 
 interface Product {
   id: string;
@@ -44,9 +45,10 @@ export default function BrandProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch('/api/brand/products', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.ok) {
@@ -62,7 +64,8 @@ export default function BrandProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token
     const token = localStorage.getItem('accessToken');
     const payload = {
       category: formData.category,
@@ -85,7 +88,7 @@ export default function BrandProductsPage() {
         : '/api/brand/products';
       
       const response = await fetch(url, {
-        method: editingProduct ? 'PATCH' : 'POST',
+        method: editingProdtoken ? `Bearer ${token}` : ''POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -106,11 +109,12 @@ export default function BrandProductsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este producto?')) return;
 
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     try {
       const response = await fetch(`/api/brand/products/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.ok) {

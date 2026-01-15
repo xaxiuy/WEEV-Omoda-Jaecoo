@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, CreditCard, Sparkles, Palette, Settings, Eye, Copy } from 'lucide-react';
+import { supabase } from '@/supabaseClient';
 import { ImageUpload } from '@/react-app/components/ImageUpload';
 import { ConditionBuilder, type Condition } from '@/react-app/components/ConditionBuilder';
 
@@ -77,9 +78,10 @@ export default function BrandCardTemplatesPage() {
 
   const fetchTemplates = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const response = await fetch('/api/brand/card-templates', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.status === 403) {
@@ -102,7 +104,8 @@ export default function BrandCardTemplatesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const payload = {
       name: formData.name,
       tier: formData.tier,
@@ -149,11 +152,12 @@ export default function BrandCardTemplatesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar esta tarjeta?')) return;
 
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     try {
       const response = await fetch(`/api/brand/card-templates/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (response.ok) {

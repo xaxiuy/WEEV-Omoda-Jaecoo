@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/supabaseClient';
 import { MessageCircle, Send, Loader2, ExternalLink } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -18,7 +19,8 @@ interface Message {
 }
 
 export default function Chat() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -27,10 +29,17 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user) {
+    const getUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        navigate('/login');
+        return;
+      }
+      setUser(authUser);
       initChat();
-    }
-  }, [user]);
+    };
+    getUser();
+  }, [navigate]);
 
   useEffect(() => {
     scrollToBottom();

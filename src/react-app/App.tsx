@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
-import { AuthProvider, useAuth } from "@/react-app/hooks/useAuth";
+import { supabase } from "@/supabaseClient";
 import { ToastProvider } from "@/react-app/hooks/useToast";
 import { NotificationsProvider } from "@/react-app/hooks/useNotifications";
 import Navigation from "@/react-app/components/Navigation";
@@ -22,7 +23,17 @@ import ChatPage from "@/react-app/pages/Chat";
 import DashboardPage from "@/react-app/pages/Dashboard";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+    getUser();
+  }, []);
   
   if (loading) {
     return (
@@ -31,15 +42,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-}
-
-export default function App() {
+  ToastProvider>
+      <NotificationsProvider>
+        <Router>
+        <Navbar />
+        <div className="pt-16">
+          <Navigation />
+        </div>
+port default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
@@ -134,11 +144,12 @@ export default function App() {
                 <VehicleManagementPage />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
+        </Routes>
+        </div>
+        <Navigation />
+      </Router>
+    </NotificationsProvider>
+  </Toast    <ProtectedRoute>
                 <AdminPanelPage />
               </ProtectedRoute>
             }
