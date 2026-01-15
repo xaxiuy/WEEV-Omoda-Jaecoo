@@ -64,9 +64,8 @@ export default function BrandProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token
-    const token = localStorage.getItem('accessToken');
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const payload = {
       category: formData.category,
       name: formData.name,
@@ -88,7 +87,7 @@ export default function BrandProductsPage() {
         : '/api/brand/products';
       
       const response = await fetch(url, {
-        method: editingProdtoken ? `Bearer ${token}` : ''POST',
+        method: editingProduct ? 'PUT' : 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
