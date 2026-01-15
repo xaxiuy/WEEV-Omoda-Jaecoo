@@ -1,0 +1,206 @@
+import { Link, useNavigate } from 'react-router';
+import { Search, Menu, X, User, LogOut, Settings, CreditCard, Building2 } from 'lucide-react';
+import { useAuth } from '@/react-app/hooks/useAuth';
+import NotificationBell from '@/react-app/components/NotificationBell';
+import { useState } from 'react';
+
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const isBrandUser = user?.role === 'brand_admin' || user?.role === 'brand_member';
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/feed?search=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery('');
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowUserMenu(false);
+    navigate('/');
+  };
+
+  if (!user) return null;
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-200 z-40 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+              <span className="text-white font-bold text-xl">W</span>
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent hidden sm:block">
+              WEEV
+            </span>
+          </Link>
+
+          {/* Search Bar - Desktop */}
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar marcas, eventos..."
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
+              />
+            </div>
+          </form>
+
+          {/* Right Actions */}
+          <div className="flex items-center space-x-2 md:space-x-3">
+            {/* Search Button - Mobile */}
+            <button 
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Search className="w-5 h-5 text-gray-600" />
+            </button>
+
+            {/* Notifications */}
+            <NotificationBell />
+
+            {/* User Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-2 p-1.5 pr-3 rounded-xl hover:bg-gray-100 transition-colors"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <span className="hidden sm:block text-gray-900 font-medium text-sm">
+                  {user.name?.split(' ')[0] || 'Usuario'}
+                </span>
+              </button>
+
+              {/* User Dropdown */}
+              {showUserMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                    {/* User Info */}
+                    <div className="p-4 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">
+                            {user.name?.charAt(0).toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 truncate">
+                            {user.name || 'Usuario'}
+                          </div>
+                          <div className="text-sm text-gray-500 truncate">
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700"
+                      >
+                        <User className="w-5 h-5" />
+                        <span className="font-medium">Mi Perfil</span>
+                      </Link>
+
+                      <Link
+                        to="/wallet"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700"
+                      >
+                        <CreditCard className="w-5 h-5" />
+                        <span className="font-medium">Mi Wallet</span>
+                      </Link>
+
+                      {isBrandUser && (
+                        <Link
+                          to="/brand"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700"
+                        >
+                          <Building2 className="w-5 h-5" />
+                          <span className="font-medium">Panel de Marca</span>
+                        </Link>
+                      )}
+
+                      <Link
+                        to="/profile"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition-colors text-gray-700"
+                      >
+                        <Settings className="w-5 h-5" />
+                        <span className="font-medium">Configuración</span>
+                      </Link>
+                    </div>
+
+                    {/* Logout */}
+                    <div className="border-t border-gray-100 py-2">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center space-x-3 px-4 py-3 hover:bg-red-50 transition-colors text-red-600 w-full"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Cerrar Sesión</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              {showMobileMenu ? (
+                <X className="w-5 h-5 text-gray-600" />
+              ) : (
+                <Menu className="w-5 h-5 text-gray-600" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Search */}
+        {showMobileMenu && (
+          <div className="md:hidden pb-4">
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar marcas, eventos..."
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
+                />
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
